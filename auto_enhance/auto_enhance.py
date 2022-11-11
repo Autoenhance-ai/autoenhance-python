@@ -108,7 +108,7 @@ class AutoEnhance:
 
         return {'error': response.json(), 'status': response.status_code}
 
-    def enhanced_img_size(self, image_id):
+    def web_optimised_img(self, image_id):
 
         """
 
@@ -152,12 +152,12 @@ class AutoEnhance:
         return {'error': response.json(), 'status': response.status_code}
 
     def edit_enhanced_img(self, image_id,
-                          vertical_correction=None,
-                          sky_replacement=None,
-                          sky_type='',
-                          cloud_type='',
-                          contrast_boost='',
-                          three_sixty=''):
+                          vertical_correction=True,
+                          sky_replacement=True,
+                          sky_type='UK_SUMMER',
+                          cloud_type='HIGH_CLOUD',
+                          contrast_boost='LOW',
+                          three_sixty=False):
 
         """
 
