@@ -35,7 +35,7 @@ class AutoEnhance:
 
         Check image status.
 
-        :param image_id: id of the image
+        :param image_id: string id of the image
 
         :return: {'image_id': '8210c1asdsa42-02a0-4692dfs-a2aa-e704e8dfdsfad04e',
                 'image_name': 'house.jpg',
@@ -57,8 +57,8 @@ class AutoEnhance:
 
         Upload an image and get processed result.
 
-        :param img_name: name of the image house.jpg or house.png
-        :param img_path: name of the image base_dir/house.jpg or image url
+        :param img_name: string name of the image house.jpg or house.png
+        :param img_path: string name of the image base_dir/house.jpg or image url
 
         :return: {'image': <_io.BytesIO object at 0x10363b0e0>, 'status': 200}
 
@@ -89,3 +89,121 @@ class AutoEnhance:
 
         return status.get('error')
 
+    def preview_enhanced_img(self, image_id):
+
+        """
+        When an image has finished processing, you can view a preview of the image with
+
+        :param image_id: id of the uploaded image
+
+        :return: {'image': <_io.BytesIO object at 0x10363b0e0>, 'status': 200}
+
+
+        """
+
+        response = self.send_request(method='GET', endpoint=f'image/{image_id}/preview')
+
+        if response.status_code == 200:
+            return {'image': io.BytesIO(response.content), 'status': response.status_code}
+
+        return {'error': response.json(), 'status': response.status_code}
+
+    def enhanced_img_size(self, image_id):
+
+        """
+
+        Web optimised enhancement.
+        Get processed result of uploaded image in different sizes or by default small.
+
+
+        :param image_id: string id of the uploaded image
+
+        :return: {'image': <_io.BytesIO object at 0x10363b0e0>, 'status': 200}
+
+
+        """
+
+        response = self.send_request(method='GET', endpoint=f'image/{image_id}/enhanced', params={'size': 'small'})
+
+        if response.status_code == 200:
+            return {'image': io.BytesIO(response.content), 'status': response.status_code}
+
+        return {'error': response.json(), 'status': response.status_code}
+
+    def full_resol_enhanced_img(self, image_id):
+
+        """
+
+       The images are usually around 4-6Mb, which can take a long time to load on slow internet.
+
+
+        :param image_id: string id of the uploaded image
+
+        :return: {'image': <_io.BytesIO object at 0x10363b0e0>, 'status': 200}
+
+
+        """
+
+        response = self.send_request(method='GET', endpoint=f'image/{image_id}/enhanced')
+
+        if response.status_code == 200:
+            return {'image': io.BytesIO(response.content), 'status': response.status_code}
+
+        return {'error': response.json(), 'status': response.status_code}
+
+    def edit_enhanced_img(self, image_id,
+                          vertical_correction=None,
+                          sky_replacement=None,
+                          sky_type='',
+                          cloud_type='',
+                          contrast_boost='',
+                          three_sixty=''):
+
+        """
+
+        If the image should have a sky replacement,
+        and it hasn’t been achieved by the AI,
+        then you can set sky_replacement: true,
+        and the AI will apply a sky replacement to the image.
+        If the image shouldn’t have a sky
+        replacement, but the AI has applied one,
+        then you can set sky_replacement: false,
+        to disable the sky replacement.
+
+
+        :param image_id: string id of the uploaded image
+        :param vertical_correction: boolean True to enable perspective correction and false to disable.
+        :param sky_replacement: boolean When true the AI will try to replace the sky if it detects a sky in the image.
+                                When false the AI will not try to detect or replace the sky in the image.
+        :param sky_type: string Set specific sky type. (Options: UK_SUMMER, UK_WINTER or USA_SUMMER). Default is UK_SUMMER.
+        :param cloud_type: string Set specific cloud type. (Options: CLEAR, LOW_CLOUD or HIGH_CLOUD). Default is HIGH_CLOUD.
+        :param contrast_boost: string Set contrast boost level. (Options: NONE, LOW, MEDIUM or HIGH). Default is LOW
+        :param three_sixty: boolean Enable/Disable 360 enhancement. By default, this is false. 360 enhancement requires a 360 panorama.
+
+
+
+
+        :return: {'image': <_io.BytesIO object at 0x10363b0e0>, 'status': 200}
+
+
+        """
+
+        body = {
+            'vertical_correction': vertical_correction,
+            'sky_replacement': sky_replacement,
+            'sky_type': sky_type,
+            'cloud_type': cloud_type,
+            'contrast_boost': contrast_boost,
+            'threesixty': three_sixty
+
+        }
+
+        response = self.send_request(
+            method='POST',
+            endpoint=f'image/{image_id}/process',
+            json=body)
+
+        if response.status_code == 200:
+            return {'image': io.BytesIO(response.content), 'status': response.status_code}
+
+        return {'error': response.json(), 'status': response.status_code}
