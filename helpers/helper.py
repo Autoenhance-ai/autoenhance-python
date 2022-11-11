@@ -30,12 +30,11 @@ def check_img_status(put, get_img_status, image_id):
         while status:
             time_out += 1
             get_status = get_img_status(image_id=image_id)['status']
-            print(get_status)
             if get_status != 'processed':
                 time.sleep(5)
             else:
                 status = False
-            if time_out == 5:
+            if time_out == 10:
                 break
 
     return {'status': status, 'error': put.content}
