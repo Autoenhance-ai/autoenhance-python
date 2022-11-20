@@ -1,11 +1,11 @@
 import unittest
-from auto_enhance import AutoEnhance
+from autoenhance import AutoEnhance
 
 
 class AutoEnhanceTestCase(unittest.TestCase):
 
     def setUp(self):
-        self.auto_enhance = AutoEnhance(auth_key='sHNNOt63uj5DgxPujNZFr3jIgv1CkVW72X3UZHn2')
+        self.auto_enhance = AutoEnhance(auth_key='token')
 
     def test_get_img_status(self):
 
