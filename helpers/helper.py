@@ -23,7 +23,7 @@ def img_type(img_name):
     return image_type
 
 
-def check_img_status(put, get_img_status, image_id):
+def get_image_status(put, get_img_status, image_id):
     status = True
     time_out = 0
     if put.status_code == 200:
@@ -38,3 +38,7 @@ def check_img_status(put, get_img_status, image_id):
                 break
 
     return {'status': status, 'error': put.content}
+
+
+def is_correct_response(response):
+    return response['status'] == 'processed'

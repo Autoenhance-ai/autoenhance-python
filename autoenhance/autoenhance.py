@@ -1,9 +1,11 @@
 import io
+
+import polling2
 import requests
 from requests import Request, Session
 from requests.adapters import HTTPAdapter, Retry
 
-from helpers.helper import image_to_buffer, img_type, check_img_status
+from helpers.helper import image_to_buffer, img_type, is_correct_response, get_image_status
 
 
 class AutoEnhance:
@@ -34,7 +36,7 @@ class AutoEnhance:
         response = session.send(prep)
         return response
 
-    def get_img_status(self, image_id):
+    def check_img_status(self, image_id):
 
         """
 
@@ -52,7 +54,12 @@ class AutoEnhance:
 
         """
 
-        response = self.send_request(method='GET', endpoint=f'image/{image_id}').json()
+        response = polling2.poll(
+            lambda: self.send_request(method='GET', endpoint=f'image/{image_id}').json(),
+            check_success=is_correct_response,
+            step=1.5,
+            max_tries=10,
+            timeout=20)
 
         return response
 
@@ -85,7 +92,7 @@ class AutoEnhance:
             put = requests.put(url=image_url, data=image_to_buffer(img_path),
                                headers={'Content-Type': f'image/{img_type(img_name)}'})
 
-            status = check_img_status(put, self.get_img_status, image_id)
+            status = get_image_status(put, self.check_img_status, image_id)
 
             if not status.get('status'):
                 response = self.send_request(method='GET', endpoint=f'image/{image_id}/preview')
