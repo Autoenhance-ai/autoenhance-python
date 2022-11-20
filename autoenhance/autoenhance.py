@@ -1,19 +1,20 @@
 import io
 import requests
 from requests import Request, Session
+from requests.adapters import HTTPAdapter, Retry
 
 from helpers.helper import image_to_buffer, img_type, check_img_status
 
 
 class AutoEnhance:
     auth_key: ''
-    base_url = 'https://api.autoenhance.ai/v2/'
+    BASE_URL = 'https://api.autoenhance.ai/v2/'
 
-    def __init__(self, auth_key, ):
+    def __init__(self, auth_key):
         self.auth_key = auth_key
 
     def send_request(self, endpoint, method, json=None, params=None):
-        request = Request(method=method, url=self.base_url + endpoint)
+        request = Request(method=method, url=self.BASE_URL + endpoint)
 
         if json:
             request.json = json
@@ -26,6 +27,10 @@ class AutoEnhance:
         prep.headers['x-api-key'] = self.auth_key
 
         session = Session()
+
+        retries = Retry(total=5, backoff_factor=1, status_forcelist=[502, 503, 504])
+        session.mount(self.BASE_URL + endpoint, HTTPAdapter(max_retries=retries))
+
         response = session.send(prep)
         return response
 
@@ -55,7 +60,7 @@ class AutoEnhance:
 
         """
 
-        Upload an image and get processed result.
+        Upload an image and get processed result of the image.
 
         :param img_name: name of the image house.jpg or house.png
         :param img_path: name of the image base_dir/house.jpg or image url
