@@ -36,13 +36,14 @@ class AutoEnhance:
         response = session.send(prep)
         return response
 
-    def check_img_status(self, image_id):
+    def check_img_status(self, image_id, polling=False):
 
         """
 
         Check image status.
 
         :param image_id: string id of the image
+        :param polling: if polling then set it to True
 
         :return: {'image_id': '8210c1asdsa42-02a0-4692dfs-a2aa-e704e8dfdsfad04e',
                 'image_name': 'house.jpg',
@@ -53,15 +54,17 @@ class AutoEnhance:
                 'status': 'processing'}
 
         """
+        if polling:
+            response = polling2.poll(
+                lambda: self.send_request(method='GET', endpoint=f'image/{image_id}').json(),
+                check_success=is_correct_response,
+                step=1.5,
+                max_tries=10,
+                timeout=20)
 
-        response = polling2.poll(
-            lambda: self.send_request(method='GET', endpoint=f'image/{image_id}').json(),
-            check_success=is_correct_response,
-            step=1.5,
-            max_tries=10,
-            timeout=20)
+            return response
 
-        return response
+        return self.send_request(method='GET', endpoint=f'image/{image_id}').json()
 
     def upload_img(self, img_name, img_path):
 
