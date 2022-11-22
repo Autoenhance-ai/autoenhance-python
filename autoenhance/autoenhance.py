@@ -8,7 +8,7 @@ from requests import Request, Session
 from requests.adapters import HTTPAdapter, Retry
 
 from helpers.helper import is_correct_response
-from helpers.param_types import CONTRAST_BOOST, SKY_TYPE, CLOUD_TYPE
+from helpers.param_types import CONTRAST_BOOST, SKY_TYPE, CLOUD_TYPE, categories_list, REPORT_CATEGORIES
 
 
 class AutoEnhance:
@@ -296,8 +296,12 @@ class AutoEnhance:
 
     def report_enhancement(self,
                            image_id: str,
-                           category: list,
+                           category: REPORT_CATEGORIES,
                            comment: Optional[str] = None):
+
+        for i in category:
+            if i not in categories_list:
+                raise ValueError(f'\"{i}\" is not in  the categories list. Valid values are {categories_list}')
 
         # https://api.autoenhance.ai/v2/image/:image_id/report
         """
