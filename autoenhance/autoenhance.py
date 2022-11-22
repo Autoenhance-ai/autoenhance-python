@@ -53,6 +53,7 @@ class AutoEnhance:
                    hdr: Optional[bool] = False,
                    ):
 
+        # https://api.autoenhance.ai/v2/image
         """
 
         Upload an image and get image id or order id by which you can get processed image.
@@ -111,6 +112,8 @@ class AutoEnhance:
                                image_id: str,
                                polling: Optional[bool] = False):
 
+        # https://api.autoenhance.ai/v2/image/:image_id
+
         """
 
         Check image status by image id.
@@ -141,6 +144,8 @@ class AutoEnhance:
 
     def check_img_status_by_order_id(self, order_id: str):
 
+        # https://api.autoenhance.ai/v2/order/:order_id
+
         """
 
         Check images status by order id.
@@ -163,6 +168,8 @@ class AutoEnhance:
 
     def preview_enhanced_img(self, image_id: str):
 
+        # https://api.autoenhance.ai/v2/image/:image_id/preview
+
         """
         When an image has finished processing, you can view a preview of the image with
 
@@ -181,6 +188,8 @@ class AutoEnhance:
         return {'error': response.json(), 'status': response.status_code}
 
     def web_optimised_img(self, image_id: str):
+
+        # https://api.autoenhance.ai/v2/image/:image_id}/enhanced?size=small
 
         """
 
@@ -203,6 +212,8 @@ class AutoEnhance:
         return {'error': response.json(), 'status': response.status_code}
 
     def full_resol_enhanced_img(self, image_id: str):
+
+        # https://api.autoenhance.ai/v2/image/:image_id/enhanced
 
         """
 
@@ -231,6 +242,8 @@ class AutoEnhance:
                           cloud_type: CLOUD_TYPE = 'HIGH_CLOUD',
                           contrast_boost: CONTRAST_BOOST = 'LOW',
                           threesixty: Optional[bool] = False):
+
+        # https://api.autoenhance.ai/v2/image/:image_id/process
 
         """
 
@@ -280,3 +293,54 @@ class AutoEnhance:
             return {'image': io.BytesIO(response.content), 'status': response.status_code}
 
         return {'error': response.json(), 'status': response.status_code}
+
+    def report_enhancement(self,
+                           image_id: str,
+                           category: list,
+                           comment: Optional[str] = None):
+
+        # https://api.autoenhance.ai/v2/image/:image_id/report
+        """
+
+        Current reporting categories:
+            download: Image failed to download
+            hdr: Images failed to merge properly or be grouped correctly
+            lens_correction: Image failed to have lens corrected or incorrectly corrected.
+            perspective_correction: Image failed to have perspective corrected or incorrectly corrected.
+            processing: The image was stuck in processing and never returned.
+            image_quality: The image quality is bad.
+            sky_replacement: Image failed to have sky replacement, incorrectly replaced sky or the sky replacement was bad.
+            contrast: Too much contrast or not enough contrast.
+            colour: The colour is off or not right.
+            white_balance: The image is too warm or too cool.
+            other: You are reporting the image for a reason not currently within our categories.
+
+
+        :param image_id: string id of the uploaded image
+        :param category: An array of items that the image failed at. e.g. skyreplacement, lenscorrection etc.
+                         ["skyreplacement","lenscorrection"]
+        :param comment: An optional text comment to provide more infomation about why the image failed.
+                                When false the AI will not try to detect or replace the sky in the image.
+                                e.g. Sky was not replaced in image and the len has not been corrected
+
+
+        :return: {'status': 200}
+
+
+        """
+
+        body = {
+            'category': category,
+            'comment': comment,
+
+        }
+
+        response = self.send_request(
+            method='POST',
+            endpoint=f'image/{image_id}/report',
+            json=body)
+
+        if response.status_code == 200:
+            return {'status': response.status_code}
+
+        return {'status': response.status_code}
