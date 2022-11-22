@@ -23,7 +23,7 @@ class AutoEnhanceTestCase(unittest.TestCase):
             'vibrant': False
         }
 
-        result = self.auto_enhance.check_img_status_by_id(image_id='52ceddc6-194ds0-485a-ds-2d122e71806c')
+        result = self.auto_enhance.check_image_enhance(image_id='52ceddc6-194ds0-485a-ds-2d122e71806c')
         self.assertEqual(result, success_response)
 
     def test_preview_enhanced_img(self):

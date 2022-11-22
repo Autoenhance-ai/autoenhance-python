@@ -108,9 +108,9 @@ class AutoEnhance:
             return {'message': put.content, 'status': put.status_code}
         return {'message': post.content, 'status': post.status_code}
 
-    def check_img_status_by_id(self,
-                               image_id: str,
-                               polling: Optional[bool] = False):
+    def check_image_enhance(self,
+                            image_id: str,
+                            polling: Optional[bool] = False):
 
         # https://api.autoenhance.ai/v2/image/:image_id
 
@@ -142,7 +142,7 @@ class AutoEnhance:
 
         return self.send_request(method='GET', endpoint=f'image/{image_id}').json()
 
-    def check_img_status_by_order_id(self, order_id: str):
+    def check_order_enhance(self, order_id: str):
 
         # https://api.autoenhance.ai/v2/order/:order_id
 
