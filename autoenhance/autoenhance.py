@@ -71,7 +71,7 @@ class AutoEnhance:
         :param hdr: Enable/Disable HDR. By default, this is false.
                     HDR will require multiple brackets, and an additional API call. Read more on how to enhance HDR.
 
-        :return: {'image': <_io.BytesIO object at 0x10363b0e0>, 'status': 200}
+        :return: {'image_id': 'i13221-dsadar-fdsf', 'order_id': 'dsadsadas2e3124', 'status': 200}
 
 
         """
