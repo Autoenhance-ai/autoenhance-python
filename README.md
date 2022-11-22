@@ -11,24 +11,20 @@ pip install autoanhance
 
 bla bla bal
 
-### how to work with API
+### Basic usage
 
 ```Python
 from autoenhance import AutoEnhance
 
 auto_enhance = AutoEnhance(auth_key='token')
 
-get_status = auto_enhance.get_img_status(image_id='52ceddsdsaadc6-1sda940-485a-98bf-2d1dsa22e71806c')
-
-url = 'https://media.istockphoto.com/id/833470744/photo/silhouette-of-lonely-tree.jpg?s=612x612&w=is&k=20&c=KO_gQuPJkpUmyQD-6GjS_3N-Uo5f_yD_gKk4OHoMnxs='
-img_path = '/base_dir/image.jpg'
-
 upload = auto_enhance.upload_img(img_name='image.jpg',
-                                 img_path=img_path)
+                                 image_buffer=b'')
 
-auto_enhance.web_optimised_img(image_id='52ceddc6das-1940-485a-98bf-2d122e71806c')
+check_img_status_by_id = auto_enhance.check_img_status_by_id(
+    image_id='52ceddsdsaadc6-1sda940-485a-98bf-2d1dsa22e71806c')
 
-auto_enhance.full_resol_enhanced_img(image_id='52ceddsadc6-1940-485a-98bf-2d122e71806c')
+check_img_status_by_order_id = auto_enhance.check_img_status_by_order_id(order_id='52ce71806c')
 
 auto_enhance.preview_enhanced_img(image_id='52cesadddc6-1940-485a-98bf-2d122e71806c')
 
