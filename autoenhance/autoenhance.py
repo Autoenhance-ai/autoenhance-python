@@ -1,11 +1,14 @@
 import io
+from mimetypes import guess_type
+from typing import Optional
 
 import polling2
 import requests
 from requests import Request, Session
 from requests.adapters import HTTPAdapter, Retry
 
-from helpers.helper import image_to_buffer, img_type, is_correct_response, get_image_status
+from helpers.helper import is_correct_response
+from helpers.param_types import CONTRAST_BOOST, SKY_TYPE, CLOUD_TYPE
 
 
 class AutoEnhance:
@@ -36,11 +39,81 @@ class AutoEnhance:
         response = session.send(prep)
         return response
 
-    def check_img_status(self, image_id, polling=False):
+    def upload_img(self,
+                   img_name: str,
+                   image_buffer: bytes,
+                   order_id: Optional[str] = None,
+                   enhance_type: Optional[str] = None,
+                   vertical_correction: Optional[bool] = True,
+                   sky_replacement: Optional[bool] = True,
+                   sky_type: SKY_TYPE = 'UK_SUMMER',
+                   cloud_type: CLOUD_TYPE = 'HIGH_CLOUD',
+                   contrast_boost: CONTRAST_BOOST = 'LOW',
+                   threesixty: Optional[bool] = False,
+                   hdr: Optional[bool] = False,
+                   ):
 
         """
 
-        Check image status.
+        Upload an image and get image id or order id by which you can get processed image.
+
+        :param img_name: name of the image house.jpg or house.png
+        :param image_buffer: pass image as a buffer
+        :param order_id: UUID string to link a group of images under one order (e.g. b1aa3999-7908-45c9-9a99-82e25cf5de8e).
+        :param enhance_type: Type of image you want enhanced (e.g. property or food).
+        :param vertical_correction: Enable/Disable vertical correction. By default, this is true.
+        :param sky_replacement: Enable/Disable sky replacement. By default, this is true.
+        :param sky_type: Set specific sky type. (Options: UK_SUMMER, UK_WINTER or USA_SUMMER). Default is UK_SUMMER.
+        :param cloud_type: Set specific cloud type. (Options: CLEAR, LOW_CLOUD or HIGH_CLOUD). Default is HIGH_CLOUD.
+        :param contrast_boost: Set contrast boost level. (Options: NONE, LOW, MEDIUM or HIGH). Default is LOW.
+        :param threesixty: Enable/Disable 360 enhancement. By default, this is false. 360 enhancement requires a 360 panorama.
+        :param hdr: Enable/Disable HDR. By default, this is false.
+                    HDR will require multiple brackets, and an additional API call. Read more on how to enhance HDR.
+
+        :return: {'image': <_io.BytesIO object at 0x10363b0e0>, 'status': 200}
+
+
+        """
+        image_type = guess_type(img_name)[0]
+
+        body = {
+            'image_name': img_name,
+            'content_type': image_type,
+            'order_id': order_id,
+            'enhance_type': enhance_type,
+            'vertical_correction': vertical_correction,
+            'sky_replacement': sky_replacement,
+            'sky_type': sky_type,
+            'cloud_type': cloud_type,
+            'contrast_boost': contrast_boost,
+            'threesixty': threesixty,
+            'hdr': hdr,
+        }
+
+        post = self.send_request(method='POST', endpoint='image', json=body)
+
+        if post.status_code == 200:
+
+            image_url = post.json().get('s3PutObjectUrl')
+            image_id = post.json().get('image_id')
+
+            put = requests.put(url=image_url, data=image_buffer,
+                               headers={'Content-Type': image_type})
+
+            if put.status_code == 200:
+                response = {'image_id': image_id, 'order_id': body.get('order_id'), 'status': put.status_code}
+                return response
+
+            return {'message': put.content, 'status': put.status_code}
+        return {'message': post.content, 'status': post.status_code}
+
+    def check_img_status_by_id(self,
+                               image_id: str,
+                               polling: Optional[bool] = False):
+
+        """
+
+        Check image status by image id.
 
         :param image_id: string id of the image
         :param polling: if polling then set it to True
@@ -66,50 +139,29 @@ class AutoEnhance:
 
         return self.send_request(method='GET', endpoint=f'image/{image_id}').json()
 
-    def upload_img(self, img_name, img_path):
+    def check_img_status_by_order_id(self, order_id: str):
 
         """
 
-        Upload an image and get processed result of the image.
+        Check images status by order id.
 
-        :param img_name: name of the image house.jpg or house.png
-        :param img_path: name of the image base_dir/house.jpg or image url
+        :param order_id: string id of the order
 
-        :return: {'image': <_io.BytesIO object at 0x10363b0e0>, 'status': 200}
+        :return: {'images': [{'image_id': '098c8f40-b3bd-4301-98eb-2a51be989dac', 'order_id': '3212310-dfs-fdsg0',
+        'image_name': 'image.jpg', 'image_type': 'jpeg', 'enhance_type': 'property', 'date_added': 1669056195000,
+        'user_id': 'auth0|6363dbcb77f7e74122ea6350', 'status': 'processed', 'sky_replacement': True,
+        'vertical_correction': True, 'vibrant': False},
 
+         {'image_id': 'd19d9cfa-dccf-466c-a2cf-8df761317db3', 'order_id': '3212310-dfs-fdsg0',
+         'image_name': 'image.jpg', 'image_type': 'jpeg', 'enhance_type': 'property', 'date_added': 1669056341000,
+          'user_id': 'auth0|6363dbcb77f7e74122ea6350', 'status': 'processed', 'sky_replacement': True,
+          'vertical_correction': True, 'vibrant': False}], 'is_processing': False, 'order_id': '3212310-dfs-fdsg0'}
 
         """
 
-        body = {
-            'image_name': img_name,
-            'content_type': f'image/{img_type(img_name)}'
-        }
+        return self.send_request(method='GET', endpoint=f'order/{order_id}').json()
 
-        post = self.send_request(method='POST', endpoint='image', json=body)
-
-        if post.status_code == 200:
-
-            image_url = post.json().get('s3PutObjectUrl')
-            image_id = post.json().get('image_id')
-
-            put = requests.put(url=image_url, data=image_to_buffer(img_path),
-                               headers={'Content-Type': f'image/{img_type(img_name)}'})
-
-            status = get_image_status(put, self.check_img_status, image_id)
-
-            if not status.get('status'):
-                response = self.send_request(method='GET', endpoint=f'image/{image_id}/preview')
-
-                if response.status_code == 200:
-                    return {'image': io.BytesIO(response.content), 'status': response.status_code}
-
-                return {'message': response.json(), 'status': response.status_code}
-
-            return status.get('error')
-
-        return {'message': post.json(), 'status': post.status_code}
-
-    def preview_enhanced_img(self, image_id):
+    def preview_enhanced_img(self, image_id: str):
 
         """
         When an image has finished processing, you can view a preview of the image with
@@ -128,7 +180,7 @@ class AutoEnhance:
 
         return {'error': response.json(), 'status': response.status_code}
 
-    def web_optimised_img(self, image_id):
+    def web_optimised_img(self, image_id: str):
 
         """
 
@@ -150,7 +202,7 @@ class AutoEnhance:
 
         return {'error': response.json(), 'status': response.status_code}
 
-    def full_resol_enhanced_img(self, image_id):
+    def full_resol_enhanced_img(self, image_id: str):
 
         """
 
@@ -171,13 +223,14 @@ class AutoEnhance:
 
         return {'error': response.json(), 'status': response.status_code}
 
-    def edit_enhanced_img(self, image_id,
-                          vertical_correction=True,
-                          sky_replacement=True,
-                          sky_type='UK_SUMMER',
-                          cloud_type='HIGH_CLOUD',
-                          contrast_boost='LOW',
-                          three_sixty=False):
+    def edit_enhanced_img(self,
+                          image_id: str,
+                          vertical_correction: Optional[bool] = True,
+                          sky_replacement: Optional[bool] = True,
+                          sky_type: SKY_TYPE = 'UK_SUMMER',
+                          cloud_type: CLOUD_TYPE = 'HIGH_CLOUD',
+                          contrast_boost: CONTRAST_BOOST = 'LOW',
+                          threesixty: Optional[bool] = False):
 
         """
 
@@ -198,7 +251,7 @@ class AutoEnhance:
         :param sky_type: string Set specific sky type. (Options: UK_SUMMER, UK_WINTER or USA_SUMMER). Default is UK_SUMMER.
         :param cloud_type: string Set specific cloud type. (Options: CLEAR, LOW_CLOUD or HIGH_CLOUD). Default is HIGH_CLOUD.
         :param contrast_boost: string Set contrast boost level. (Options: NONE, LOW, MEDIUM or HIGH). Default is LOW
-        :param three_sixty: boolean Enable/Disable 360 enhancement. By default, this is false. 360 enhancement requires a 360 panorama.
+        :param threesixty: boolean Enable/Disable 360 enhancement. By default, this is false. 360 enhancement requires a 360 panorama.
 
 
 
@@ -214,7 +267,7 @@ class AutoEnhance:
             'sky_type': sky_type,
             'cloud_type': cloud_type,
             'contrast_boost': contrast_boost,
-            'threesixty': three_sixty
+            'threesixty': threesixty
 
         }
 
