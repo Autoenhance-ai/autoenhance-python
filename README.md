@@ -7,10 +7,6 @@ pip install autoanhance
 
 ```
 
-### Get started
-
-bla bla bal
-
 ### Basic usage
 
 ```Python
