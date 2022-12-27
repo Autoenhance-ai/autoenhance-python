@@ -290,7 +290,7 @@ class AutoEnhance:
             json=body)
 
         if response.status_code == 200:
-            return {'image': io.BytesIO(response.content), 'status': response.status_code}
+            return response.json()
 
         return {'error': response.json(), 'status': response.status_code}
 
